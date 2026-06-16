@@ -204,3 +204,5 @@ def delete_document(filename: str) -> dict:
     conn.commit()
     conn.close()
     return {"filename": filename, "deleted_chunks": deleted}
+
+

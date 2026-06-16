@@ -1,26 +1,17 @@
 """
-ingest.py - DeepSeek Embedding版本
-用 SQLite + numpy 做向量存储，DeepSeek做embedding，替换Voyage AI。
+ingest.py - 轻量版（纯SQLite存储，无需Embedding API）
+上传时直接存文本，查询时用关键词匹配，避免API调用失败导致上传报错。
 """
 
 import os
 import io
-import json
 import sqlite3
-import numpy as np
-from openai import OpenAI
 from pypdf import PdfReader
 from docx import Document
 from openpyxl import load_workbook
 from pptx import Presentation
 
-DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
-DB_PATH = os.environ.get("CHROMA_PATH", "./chroma_db").rstrip("/") + "/kb.sqlite3"
-
-embed_client = OpenAI(
-    api_key=DEEPSEEK_API_KEY,
-    base_url="https://api.deepseek.com"
-) if DEEPSEEK_API_KEY else None
+DB_PATH = os.environ.get("CHROMA_PATH", "/data/chroma_db").rstrip("/") + "/kb.sqlite3"
 
 
 def _get_conn():
@@ -30,8 +21,7 @@ def _get_conn():
         CREATE TABLE IF NOT EXISTS chunks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             source TEXT NOT NULL,
-            text TEXT NOT NULL,
-            embedding TEXT NOT NULL
+            text TEXT NOT NULL
         )
     """)
     conn.commit()
@@ -128,29 +118,17 @@ def chunk_text(text: str, chunk_size: int = 800, overlap: int = 100) -> list:
     return chunks
 
 
-def embed_texts(texts: list) -> list:
-    if not embed_client:
-        raise RuntimeError("DEEPSEEK_API_KEY 未配置")
-    result = embed_client.embeddings.create(
-        model="deepseek-embedding",
-        input=texts,
-    )
-    return [item.embedding for item in result.data]
-
-
 def ingest_document(filename: str, file_bytes: bytes, metadata: dict = None) -> dict:
     text = extract_text_any(filename, file_bytes)
     chunks = chunk_text(text)
     if not chunks:
         return {"filename": filename, "chunks_added": 0, "message": "未提取到文本内容"}
 
-    embeddings = embed_texts(chunks)
-
     conn = _get_conn()
     conn.execute("DELETE FROM chunks WHERE source = ?", (filename,))
     conn.executemany(
-        "INSERT INTO chunks (source, text, embedding) VALUES (?, ?, ?)",
-        [(filename, chunk, json.dumps(emb)) for chunk, emb in zip(chunks, embeddings)]
+        "INSERT INTO chunks (source, text) VALUES (?, ?)",
+        [(filename, chunk) for chunk in chunks]
     )
     conn.commit()
     conn.close()
@@ -159,35 +137,25 @@ def ingest_document(filename: str, file_bytes: bytes, metadata: dict = None) -> 
 
 
 def query_knowledge_base(query: str, top_k: int = 5) -> list:
-    if not embed_client:
-        raise RuntimeError("DEEPSEEK_API_KEY 未配置")
-
-    query_emb = np.array(
-        embed_client.embeddings.create(
-            model="deepseek-embedding",
-            input=[query],
-        ).data[0].embedding
-    )
-
     conn = _get_conn()
-    rows = conn.execute("SELECT source, text, embedding FROM chunks").fetchall()
+    rows = conn.execute("SELECT source, text FROM chunks").fetchall()
     conn.close()
 
     if not rows:
         return []
 
-    sources = [r[0] for r in rows]
-    texts = [r[1] for r in rows]
-    matrix = np.array([json.loads(r[2]) for r in rows])
+    keywords = [w for w in query.replace("，", " ").replace("。", " ").split() if len(w) > 1]
+    if not keywords:
+        return [{"text": r[1], "source": r[0]} for r in rows[:top_k]]
 
-    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
-    norms[norms == 0] = 1
-    matrix_norm = matrix / norms
-    query_norm = query_emb / (np.linalg.norm(query_emb) or 1)
-    scores = matrix_norm @ query_norm
+    scored = []
+    for source, text in rows:
+        score = sum(text.count(kw) for kw in keywords)
+        if score > 0:
+            scored.append((score, source, text))
 
-    top_indices = np.argsort(scores)[::-1][:top_k]
-    return [{"text": texts[i], "source": sources[i]} for i in top_indices]
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [{"text": t, "source": s} for _, s, t in scored[:top_k]]
 
 
 def list_documents() -> list:
@@ -204,5 +172,3 @@ def delete_document(filename: str) -> dict:
     conn.commit()
     conn.close()
     return {"filename": filename, "deleted_chunks": deleted}
-
-

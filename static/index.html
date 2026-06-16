@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>医美社媒运营助手</title>
+<title>赛诺秀社媒运营助手</title>
 <style>
   :root {
     --ink: #1c2b2d;
@@ -29,140 +29,168 @@
 
   .layout {
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 300px 1fr;
     height: 100vh;
   }
 
-  /* ---------- Sidebar ---------- */
   .sidebar {
     border-right: 1px solid var(--line);
-    padding: 24px 20px;
+    padding: 20px 16px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 14px;
     background: #fbfaf6;
+    overflow-y: auto;
   }
 
   .brand {
     font-family: var(--serif);
-    font-size: 19px;
+    font-size: 17px;
     font-weight: 600;
     letter-spacing: 0.02em;
     border-bottom: 2px solid var(--accent);
-    padding-bottom: 12px;
+    padding-bottom: 10px;
+    flex-shrink: 0;
   }
 
   .brand small {
     display: block;
     font-family: var(--sans);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 400;
     color: #8a8378;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    margin-top: 4px;
+    margin-top: 3px;
   }
 
-  .kb-section h3 {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: #8a8378;
-    margin: 0 0 10px 0;
+  .kb-categories { display: flex; flex-direction: column; gap: 8px; }
+
+  .kb-cat {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .kb-cat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .kb-cat-header:hover { background: var(--accent-soft); }
+
+  .kb-cat-header .cat-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .kb-cat-header .cat-icon { font-size: 14px; }
+  .kb-cat-header .cat-count {
+    font-size: 10px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 10px;
+    padding: 1px 6px;
     font-weight: 600;
   }
 
-  .upload-btn {
+  .kb-cat-header .chevron {
+    font-size: 10px;
+    color: #a39b8c;
+    transition: transform 0.2s;
+  }
+  .kb-cat.open .chevron { transform: rotate(180deg); }
+
+  .kb-cat-body {
+    display: none;
+    padding: 8px 10px;
+    border-top: 1px solid var(--line);
+    background: #fdfcf9;
+  }
+  .kb-cat.open .kb-cat-body { display: block; }
+
+  .upload-btn-small {
     display: block;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 10px 12px;
+    width: 100%;
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 7px 10px;
     text-align: center;
     cursor: pointer;
+    font-size: 11.5px;
+    color: #8a8378;
+    background: transparent;
     transition: border-color 0.15s, background 0.15s;
-    font-size: 12.5px;
-    color: var(--ink);
-    background: #fff;
+    margin-bottom: 8px;
   }
-  .upload-btn:hover {
+  .upload-btn-small:hover {
     border-color: var(--accent);
     background: var(--accent-soft);
+    color: var(--ink);
   }
-  .upload-btn input { display: none; }
+  .upload-btn-small input { display: none; }
 
-  .doc-list {
-    list-style: none;
-    margin: 12px 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    max-height: 280px;
-    overflow-y: auto;
+  .upload-status-small {
+    font-size: 11px;
+    color: var(--accent);
+    min-height: 14px;
+    margin-bottom: 4px;
   }
+
+  .doc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+
   .doc-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 12.5px;
+    font-size: 11.5px;
     background: #fff;
     border: 1px solid var(--line);
     border-radius: 4px;
-    padding: 6px 10px;
-    gap: 8px;
+    padding: 5px 8px;
+    gap: 6px;
   }
   .doc-item span.name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-family: var(--mono);
+    font-size: 10.5px;
+    flex: 1;
   }
   .doc-item button {
-    border: none;
-    background: none;
-    color: #b56a5a;
-    cursor: pointer;
-    font-size: 12px;
-    flex-shrink: 0;
+    border: none; background: none; color: #b56a5a;
+    cursor: pointer; font-size: 11px; flex-shrink: 0; padding: 0;
   }
   .doc-item button:hover { text-decoration: underline; }
 
-  .upload-status {
-    font-size: 12px;
-    color: var(--accent);
-    min-height: 16px;
-  }
-
   .meta-note {
     margin-top: auto;
-    font-size: 11px;
+    font-size: 10.5px;
     color: #a39b8c;
     line-height: 1.6;
     border-top: 1px solid var(--line);
-    padding-top: 14px;
+    padding-top: 12px;
+    flex-shrink: 0;
   }
 
-  /* ---------- Main / Chat ---------- */
-  .main {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-  }
+  .main { display: flex; flex-direction: column; height: 100vh; }
 
   .chat-window {
-    flex: 1;
-    overflow-y: auto;
-    padding: 32px 48px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+    flex: 1; overflow-y: auto; padding: 28px 44px;
+    display: flex; flex-direction: column; gap: 22px;
   }
 
-  .msg {
-    max-width: 720px;
-    line-height: 1.7;
-    font-size: 14.5px;
-  }
+  .msg { max-width: 720px; line-height: 1.75; font-size: 14.5px; }
   .msg.user {
     align-self: flex-end;
     background: var(--ink);
@@ -170,10 +198,7 @@
     padding: 10px 16px;
     border-radius: 10px 10px 2px 10px;
   }
-  .msg.assistant {
-    align-self: flex-start;
-    padding: 4px 0;
-  }
+  .msg.assistant { align-self: flex-start; padding: 4px 0; }
   .msg.assistant::before {
     content: '助手';
     display: block;
@@ -183,183 +208,72 @@
     letter-spacing: 0.1em;
     margin-bottom: 6px;
   }
-  .msg.assistant .sources {
-    margin-top: 10px;
-    font-size: 11.5px;
-    color: #a39b8c;
-    font-family: var(--mono);
-  }
-  .msg pre, .msg code {
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    padding: 2px 6px;
-    font-size: 13px;
-  }
-  .msg table {
-    border-collapse: collapse;
-    width: 100%;
-    margin: 8px 0;
-    font-size: 13px;
-  }
-  .msg th, .msg td {
-    border: 1px solid var(--line);
-    padding: 6px 10px;
-    text-align: left;
-  }
+  .msg.assistant .sources { margin-top: 10px; font-size: 11px; color: #a39b8c; font-family: var(--mono); }
+  .msg table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 13px; }
+  .msg th, .msg td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; }
   .msg th { background: var(--accent-soft); }
 
-  .empty-state {
-    margin: auto;
-    text-align: center;
-    color: #a39b8c;
-    max-width: 480px;
-  }
-  .empty-state h2 {
-    font-family: var(--serif);
-    font-size: 22px;
-    color: var(--ink);
-    margin-bottom: 8px;
-  }
-  .empty-state p { font-size: 13.5px; line-height: 1.7; }
+  .empty-state { margin: auto; text-align: center; color: #a39b8c; max-width: 480px; }
+  .empty-state h2 { font-family: var(--serif); font-size: 20px; color: var(--ink); margin-bottom: 8px; }
+  .empty-state p { font-size: 13px; line-height: 1.7; }
 
-  .loading-dots::after {
-    content: '·';
-    animation: dots 1.2s steps(3, end) infinite;
-  }
+  .loading-dots::after { content: '·'; animation: dots 1.2s steps(3, end) infinite; }
   @keyframes dots {
-    0%, 20% { content: '·'; }
-    40% { content: '··'; }
-    60%, 100% { content: '···'; }
+    0%, 20% { content: '·'; } 40% { content: '··'; } 60%, 100% { content: '···'; }
   }
 
-  /* ---------- Input bar ---------- */
-  .input-bar {
-    border-top: 1px solid var(--line);
-    padding: 16px 48px 24px;
-    background: var(--paper);
-  }
-  .input-row {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-  }
+  .input-bar { border-top: 1px solid var(--line); padding: 14px 44px 20px; background: var(--paper); }
+  .input-row { display: flex; gap: 10px; align-items: flex-end; }
+
   textarea {
-    flex: 1;
-    resize: none;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 12px 14px;
-    font-size: 14px;
-    font-family: var(--sans);
-    background: #fff;
-    color: var(--ink);
-    min-height: 46px;
-    max-height: 160px;
-    line-height: 1.5;
+    flex: 1; resize: none; border: 1px solid var(--line); border-radius: 8px;
+    padding: 11px 14px; font-size: 14px; font-family: var(--sans);
+    background: #fff; color: var(--ink); min-height: 44px; max-height: 160px; line-height: 1.5;
   }
-  textarea:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
+  textarea:focus { outline: none; border-color: var(--accent); }
+
   .send-btn {
-    background: var(--ink);
-    color: var(--paper);
-    border: none;
-    border-radius: 8px;
-    padding: 12px 22px;
-    font-size: 14px;
-    cursor: pointer;
-    font-family: var(--sans);
-    transition: background 0.15s;
-    flex-shrink: 0;
+    background: var(--ink); color: var(--paper); border: none; border-radius: 8px;
+    padding: 11px 20px; font-size: 14px; cursor: pointer; font-family: var(--sans);
+    transition: background 0.15s; flex-shrink: 0;
   }
   .send-btn:hover { background: var(--accent); }
   .send-btn:disabled { background: var(--line); cursor: not-allowed; }
 
   .attach-btn {
-    flex-shrink: 0;
-    width: 46px;
-    height: 46px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 18px;
+    flex-shrink: 0; width: 44px; height: 44px; border: 1px solid var(--line);
+    border-radius: 8px; background: #fff; display: flex; align-items: center;
+    justify-content: center; cursor: pointer; font-size: 17px;
     transition: border-color 0.15s, background 0.15s;
   }
-  .attach-btn:hover {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-  }
-  .attach-btn.has-file {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-  }
-  .attached-name {
-    font-family: var(--mono);
-    color: var(--accent);
-    max-width: 240px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+  .attach-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .attach-btn.has-file { border-color: var(--accent); background: var(--accent-soft); }
 
   .input-options {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 8px;
-    font-size: 12px;
-    color: #8a8378;
+    display: flex; align-items: center; gap: 10px; margin-top: 7px;
+    font-size: 12px; color: #8a8378; flex-wrap: wrap;
   }
-  .input-options label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    cursor: pointer;
+  .input-options label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+
+  .attached-name {
+    font-family: var(--mono); color: var(--accent); font-size: 11px;
+    max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
 
-  /* ---------- 手机端适配 ---------- */
   @media (max-width: 768px) {
-    .layout {
-      grid-template-columns: 1fr;
-      grid-template-rows: auto 1fr;
-    }
+    .layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
     .sidebar {
-      border-right: none;
-      border-bottom: 1px solid var(--line);
-      padding: 16px;
-      gap: 12px;
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: center;
+      border-right: none; border-bottom: 1px solid var(--line);
+      padding: 12px; flex-direction: row; flex-wrap: wrap;
+      align-items: flex-start; gap: 8px; max-height: 45vh;
     }
-    .brand {
-      border-bottom: none;
-      padding-bottom: 0;
-      font-size: 16px;
-      flex: 1;
-    }
+    .brand { flex: 1; border-bottom: none; padding-bottom: 0; font-size: 15px; }
     .brand small { display: none; }
-    .kb-section {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .kb-section h3 { display: none; }
-    .upload-btn { padding: 8px 12px; font-size: 12px; white-space: nowrap; }
-    .doc-list { max-height: 80px; flex-direction: row; flex-wrap: wrap; }
-    .upload-status { font-size: 11px; }
+    .kb-categories { flex-direction: row; flex-wrap: wrap; width: 100%; }
+    .kb-cat { min-width: 140px; flex: 1; }
     .meta-note { display: none; }
-    .chat-window { padding: 16px 16px; }
-    .msg { max-width: 100%; font-size: 14px; }
-    .input-bar { padding: 12px 16px 16px; }
-    .send-btn { padding: 12px 16px; font-size: 13px; }
+    .chat-window { padding: 16px; }
+    .input-bar { padding: 10px 16px 14px; }
   }
 </style>
 </head>
@@ -368,23 +282,77 @@
 
   <aside class="sidebar">
     <div class="brand">
-      医美社媒运营助手
+      赛诺秀社媒运营助手
       <small>Knowledge Base · Agent</small>
     </div>
 
-    <div class="kb-section">
-      <h3>产品资料库</h3>
-      <label class="upload-btn" id="uploadBox">
-        + 上传资料(Word/PDF/Excel/PPT)
-        <input type="file" id="fileInput" accept=".pdf,.docx,.xlsx,.xlsm,.pptx" multiple />
-      </label>
-      <div class="upload-status" id="uploadStatus"></div>
-      <ul class="doc-list" id="docList"></ul>
+    <div class="kb-categories">
+
+      <div class="kb-cat" id="cat-product">
+        <div class="kb-cat-header" onclick="toggleCat('cat-product')">
+          <div class="cat-left">
+            <span class="cat-icon">📋</span>
+            <span>产品资料</span>
+            <span class="cat-count" id="count-product">0</span>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="kb-cat-body">
+          <label class="upload-btn-small">
+            + 上传产品资料(PDF/Word/PPT)
+            <input type="file" accept=".pdf,.docx,.xlsx,.xlsm,.pptx,.txt" multiple
+              onchange="handleUpload(this, 'product', 'status-product')" />
+          </label>
+          <div class="upload-status-small" id="status-product"></div>
+          <ul class="doc-list" id="list-product"></ul>
+        </div>
+      </div>
+
+      <div class="kb-cat" id="cat-2b">
+        <div class="kb-cat-header" onclick="toggleCat('cat-2b')">
+          <div class="cat-left">
+            <span class="cat-icon">🏥</span>
+            <span>2B往期文章</span>
+            <span class="cat-count" id="count-2b">0</span>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="kb-cat-body">
+          <label class="upload-btn-small">
+            + 上传2B文章(Word/PDF)
+            <input type="file" accept=".pdf,.docx,.txt" multiple
+              onchange="handleUpload(this, '2b', 'status-2b')" />
+          </label>
+          <div class="upload-status-small" id="status-2b"></div>
+          <ul class="doc-list" id="list-2b"></ul>
+        </div>
+      </div>
+
+      <div class="kb-cat" id="cat-2c">
+        <div class="kb-cat-header" onclick="toggleCat('cat-2c')">
+          <div class="cat-left">
+            <span class="cat-icon">✨</span>
+            <span>2C往期文章</span>
+            <span class="cat-count" id="count-2c">0</span>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="kb-cat-body">
+          <label class="upload-btn-small">
+            + 上传2C文章(Word/PDF)
+            <input type="file" accept=".pdf,.docx,.txt" multiple
+              onchange="handleUpload(this, '2c', 'status-2c')" />
+          </label>
+          <div class="upload-status-small" id="status-2c"></div>
+          <ul class="doc-list" id="list-2c"></ul>
+        </div>
+      </div>
+
     </div>
 
     <div class="meta-note">
-      上传产品资料后即可作为知识库引用。<br/>
-      对话中可直接提问选题创意或产品信息，模型会自动检索相关资料 + 联网搜索热点。
+      上传资料后即可作为知识库引用。<br/>
+      对话时模型会自动检索相关内容。
     </div>
   </aside>
 
@@ -392,13 +360,13 @@
     <div class="chat-window" id="chatWindow">
       <div class="empty-state" id="emptyState">
         <h2>开始一次对话</h2>
-        <p>例如：「2C方向，给我3个公众号选题」或「这款设备的注册证适用范围是什么」</p>
+        <p>例如：「2C方向，结合当下热点给我3个选题」<br/>或「帮我写一篇TempSure的2B推文」</p>
       </div>
     </div>
 
     <div class="input-bar">
       <div class="input-row">
-        <label class="attach-btn" id="attachBtn" title="上传文案/素材稿到本次对话">
+        <label class="attach-btn" id="attachBtn" title="附件上传到本次对话">
           📎
           <input type="file" id="attachInput" accept=".pdf,.docx,.xlsx,.xlsm,.pptx,.txt" style="display:none" />
         </label>
@@ -407,22 +375,18 @@
       </div>
       <div class="input-options">
         <label><input type="checkbox" id="webSearchToggle" checked /> 联网搜索热点</label>
-        <label><input type="checkbox" id="saveToKbToggle" /> 同时存入知识库</label>
+        <label><input type="checkbox" id="saveToKbToggle" /> 附件同时存入知识库</label>
         <span id="attachedFileName" class="attached-name"></span>
       </div>
     </div>
   </main>
 
 </div>
-
-<script>
+  <script>
 const chatWindow = document.getElementById('chatWindow');
 const emptyState = document.getElementById('emptyState');
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
-const fileInput = document.getElementById('fileInput');
-const uploadStatus = document.getElementById('uploadStatus');
-const docList = document.getElementById('docList');
 const webSearchToggle = document.getElementById('webSearchToggle');
 const attachBtn = document.getElementById('attachBtn');
 const attachInput = document.getElementById('attachInput');
@@ -430,45 +394,93 @@ const attachedFileName = document.getElementById('attachedFileName');
 const saveToKbToggle = document.getElementById('saveToKbToggle');
 
 let history = [];
-let pendingAttachment = null; // { filename, text, truncated }
+let pendingAttachment = null;
 
-// ---------- Auto-resize textarea ----------
-messageInput.addEventListener('input', () => {
-  messageInput.style.height = 'auto';
-  messageInput.style.height = Math.min(messageInput.scrollHeight, 160) + 'px';
-});
+const CAT_PREFIX = { product: '[产品]', '2b': '[2B]', '2c': '[2C]' };
 
-messageInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
+function toggleCat(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+function autoExpand() {
+  ['cat-product', 'cat-2b', 'cat-2c'].forEach(id => {
+    const cat = id.replace('cat-', '');
+    const list = document.getElementById('list-' + cat);
+    if (list && list.children.length > 0) {
+      document.getElementById(id).classList.add('open');
+    }
+  });
+}
+
+async function handleUpload(input, category, statusId) {
+  const files = Array.from(input.files);
+  const statusEl = document.getElementById(statusId);
+  const prefix = CAT_PREFIX[category];
+
+  for (const file of files) {
+    statusEl.textContent = `正在上传 ${file.name}...`;
+    const renamedFile = new File([file], `${prefix}${file.name}`, { type: file.type });
+    const formData = new FormData();
+    formData.append('file', renamedFile);
+    try {
+      const res = await fetch('/upload', { method: 'POST', body: formData });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || '上传失败');
+      }
+      const data = await res.json();
+      statusEl.textContent = `${file.name} 已导入，共 ${data.chunks_added} 段`;
+    } catch (e) {
+      statusEl.textContent = `${file.name} 上传失败: ${e.message}`;
+    }
   }
-});
+  input.value = '';
+  loadDocuments();
+}
 
-sendBtn.addEventListener('click', sendMessage);
+async function loadDocuments() {
+  try {
+    const res = await fetch('/documents');
+    const data = await res.json();
+    const docs = data.documents || [];
 
-// ---------- Chat ----------
-function addMessage(role, text, sources) {
-  emptyState.style.display = 'none';
-  const div = document.createElement('div');
-  div.className = `msg ${role}`;
-  div.innerHTML = renderMarkdown(text);
+    const groups = { product: [], '2b': [], '2c': [] };
+    docs.forEach(name => {
+      if (name.startsWith('[产品]')) groups.product.push(name);
+      else if (name.startsWith('[2B]')) groups['2b'].push(name);
+      else if (name.startsWith('[2C]')) groups['2c'].push(name);
+    });
 
-  if (sources && sources.length > 0) {
-    const srcDiv = document.createElement('div');
-    srcDiv.className = 'sources';
-    srcDiv.textContent = '参考资料: ' + [...new Set(sources)].join(', ');
-    div.appendChild(srcDiv);
+    Object.entries(groups).forEach(([cat, files]) => {
+      const list = document.getElementById('list-' + cat);
+      const count = document.getElementById('count-' + cat);
+      if (!list) return;
+      list.innerHTML = '';
+      count.textContent = files.length;
+      files.forEach(name => {
+        const displayName = name.replace(/^\[产品\]|\[2B\]|\[2C\]/, '');
+        const li = document.createElement('li');
+        li.className = 'doc-item';
+        li.innerHTML = `<span class="name" title="${displayName}">${displayName}</span><button data-name="${name}">删除</button>`;
+        list.appendChild(li);
+      });
+      list.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          await fetch(`/documents/${encodeURIComponent(btn.dataset.name)}`, { method: 'DELETE' });
+          loadDocuments();
+        });
+      });
+    });
+
+    autoExpand();
+  } catch (e) {
+    console.error(e);
   }
-
-  chatWindow.appendChild(div);
-  chatWindow.scrollTop = chatWindow.scrollHeight;
-  return div;
 }
 
 function renderMarkdown(text) {
-  // 轻量 markdown 渲染：标题、粗体、列表、表格、换行
-  let html = text
+  return text
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/^### (.*$)/gim, '<h4>$1</h4>')
     .replace(/^## (.*$)/gim, '<h3>$1</h3>')
@@ -476,8 +488,32 @@ function renderMarkdown(text) {
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/^- (.*$)/gim, '<li>$1</li>')
     .replace(/\n/g, '<br/>');
-  return html;
 }
+
+function addMessage(role, text, sources) {
+  emptyState.style.display = 'none';
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = renderMarkdown(text);
+  if (sources && sources.length > 0) {
+    const srcDiv = document.createElement('div');
+    srcDiv.className = 'sources';
+    srcDiv.textContent = '参考资料: ' + [...new Set(sources)].map(s => s.replace(/^\[产品\]|\[2B\]|\[2C\]/, '')).join(', ');
+    div.appendChild(srcDiv);
+  }
+  chatWindow.appendChild(div);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+  return div;
+}
+
+messageInput.addEventListener('input', () => {
+  messageInput.style.height = 'auto';
+  messageInput.style.height = Math.min(messageInput.scrollHeight, 160) + 'px';
+});
+messageInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+sendBtn.addEventListener('click', sendMessage);
 
 async function sendMessage() {
   const text = messageInput.value.trim();
@@ -497,7 +533,6 @@ async function sendMessage() {
   messageInput.style.height = 'auto';
   sendBtn.disabled = true;
 
-  // 清除附件状态
   pendingAttachment = null;
   attachBtn.classList.remove('has-file');
   attachedFileName.textContent = '';
@@ -510,22 +545,17 @@ async function sendMessage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: payloadText || '请分析这份附件内容',
-        history: history.slice(0, -1), // 不重复发送当前消息
+        history: history.slice(0, -1),
         use_web_search: webSearchToggle.checked,
       }),
     });
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || '请求失败');
-    }
-
+    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || '请求失败'); }
     const data = await res.json();
     loadingDiv.innerHTML = renderMarkdown(data.reply);
     if (data.kb_sources && data.kb_sources.length > 0) {
       const srcDiv = document.createElement('div');
       srcDiv.className = 'sources';
-      srcDiv.textContent = '参考资料: ' + [...new Set(data.kb_sources)].join(', ');
+      srcDiv.textContent = '参考资料: ' + [...new Set(data.kb_sources)].map(s => s.replace(/^\[产品\]|\[2B\]|\[2C\]/, '')).join(', ');
       loadingDiv.appendChild(srcDiv);
     }
     history.push({ role: 'assistant', content: data.reply });
@@ -537,32 +567,21 @@ async function sendMessage() {
   }
 }
 
-// ---------- Chat attachment ----------
 attachInput.addEventListener('change', async () => {
   const file = attachInput.files[0];
   if (!file) return;
-
-  attachedFileName.textContent = `正在解析 ${file.name} ...`;
+  attachedFileName.textContent = `正在解析 ${file.name}...`;
   const formData = new FormData();
   formData.append('file', file);
-
   try {
-    const res = await fetch(`/extract?save_to_kb=${saveToKbToggle.checked}`, {
-      method: 'POST',
-      body: formData,
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || '解析失败');
-    }
+    const res = await fetch(`/extract?save_to_kb=${saveToKbToggle.checked}`, { method: 'POST', body: formData });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || '解析失败'); }
     const data = await res.json();
     pendingAttachment = data;
     attachBtn.classList.add('has-file');
     attachedFileName.textContent = `已附加: ${file.name}${data.truncated ? '（已截断）' : ''}`;
-    if (saveToKbToggle.checked) {
-      attachedFileName.textContent += data.kb_result && !data.kb_result.error
-        ? '，已存入知识库'
-        : '';
+    if (saveToKbToggle.checked && data.kb_result && !data.kb_result.error) {
+      attachedFileName.textContent += '，已存入知识库';
       loadDocuments();
     }
   } catch (e) {
@@ -572,54 +591,8 @@ attachInput.addEventListener('change', async () => {
   attachInput.value = '';
 });
 
-
-fileInput.addEventListener('change', async () => {
-  const files = Array.from(fileInput.files);
-  for (const file of files) {
-    uploadStatus.textContent = `正在上传 ${file.name} ...`;
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-      const res = await fetch('/upload', { method: 'POST', body: formData });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || '上传失败');
-      }
-      const data = await res.json();
-      uploadStatus.textContent = `${file.name} 已导入，共 ${data.chunks_added} 段`;
-    } catch (e) {
-      uploadStatus.textContent = `${file.name} 上传失败: ${e.message}`;
-    }
-  }
-  fileInput.value = '';
-  loadDocuments();
-});
-
-// ---------- Document list ----------
-async function loadDocuments() {
-  try {
-    const res = await fetch('/documents');
-    const data = await res.json();
-    docList.innerHTML = '';
-    (data.documents || []).forEach((name) => {
-      const li = document.createElement('li');
-      li.className = 'doc-item';
-      li.innerHTML = `<span class="name">${name}</span><button data-name="${name}">删除</button>`;
-      docList.appendChild(li);
-    });
-    docList.querySelectorAll('button').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const name = btn.dataset.name;
-        await fetch(`/documents/${encodeURIComponent(name)}`, { method: 'DELETE' });
-        loadDocuments();
-      });
-    });
-  } catch (e) {
-    console.error(e);
-  }
-}
-
 loadDocuments();
 </script>
 </body>
 </html>
+    

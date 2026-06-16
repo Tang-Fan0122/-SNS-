@@ -1,7 +1,6 @@
 """
-ingest.py - 轻量版
-用 SQLite + numpy 做向量存储和检索，替换 ChromaDB。
-内存占用约 50-80MB，适合 Railway 免费套餐。
+ingest.py - DeepSeek Embedding版本
+用 SQLite + numpy 做向量存储，DeepSeek做embedding，替换Voyage AI。
 """
 
 import os
@@ -9,18 +8,19 @@ import io
 import json
 import sqlite3
 import numpy as np
-import voyageai
+from openai import OpenAI
 from pypdf import PdfReader
 from docx import Document
 from openpyxl import load_workbook
 from pptx import Presentation
 
-VOYAGE_API_KEY = os.environ.get("VOYAGE_API_KEY")
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 DB_PATH = os.environ.get("CHROMA_PATH", "./chroma_db").rstrip("/") + "/kb.sqlite3"
 
-vo = None
-if VOYAGE_API_KEY:
-    vo = voyageai.Client(api_key=VOYAGE_API_KEY)
+embed_client = OpenAI(
+    api_key=DEEPSEEK_API_KEY,
+    base_url="https://api.deepseek.com"
+) if DEEPSEEK_API_KEY else None
 
 
 def _get_conn():
@@ -37,8 +37,6 @@ def _get_conn():
     conn.commit()
     return conn
 
-
-# ---------- 文件解析 ----------
 
 def extract_text_from_pdf(file_bytes: bytes) -> str:
     reader = PdfReader(io.BytesIO(file_bytes))
@@ -116,8 +114,6 @@ def extract_text_any(filename: str, file_bytes: bytes) -> str:
         raise ValueError("仅支持 .pdf、.docx、.xlsx、.pptx、.txt 文件")
 
 
-# ---------- 向量化 ----------
-
 def chunk_text(text: str, chunk_size: int = 800, overlap: int = 100) -> list:
     text = text.strip()
     if not text:
@@ -133,13 +129,14 @@ def chunk_text(text: str, chunk_size: int = 800, overlap: int = 100) -> list:
 
 
 def embed_texts(texts: list) -> list:
-    if not vo:
-        raise RuntimeError("VOYAGE_API_KEY 未配置")
-    result = vo.embed(texts, model="voyage-3", input_type="document")
-    return result.embeddings
+    if not embed_client:
+        raise RuntimeError("DEEPSEEK_API_KEY 未配置")
+    result = embed_client.embeddings.create(
+        model="deepseek-embedding",
+        input=texts,
+    )
+    return [item.embedding for item in result.data]
 
-
-# ---------- 知识库操作 ----------
 
 def ingest_document(filename: str, file_bytes: bytes, metadata: dict = None) -> dict:
     text = extract_text_any(filename, file_bytes)
@@ -150,7 +147,6 @@ def ingest_document(filename: str, file_bytes: bytes, metadata: dict = None) -> 
     embeddings = embed_texts(chunks)
 
     conn = _get_conn()
-    # 先删除同名文件旧数据
     conn.execute("DELETE FROM chunks WHERE source = ?", (filename,))
     conn.executemany(
         "INSERT INTO chunks (source, text, embedding) VALUES (?, ?, ?)",
@@ -163,11 +159,14 @@ def ingest_document(filename: str, file_bytes: bytes, metadata: dict = None) -> 
 
 
 def query_knowledge_base(query: str, top_k: int = 5) -> list:
-    if not vo:
-        raise RuntimeError("VOYAGE_API_KEY 未配置")
+    if not embed_client:
+        raise RuntimeError("DEEPSEEK_API_KEY 未配置")
 
     query_emb = np.array(
-        vo.embed([query], model="voyage-3", input_type="query").embeddings[0]
+        embed_client.embeddings.create(
+            model="deepseek-embedding",
+            input=[query],
+        ).data[0].embedding
     )
 
     conn = _get_conn()
@@ -181,7 +180,6 @@ def query_knowledge_base(query: str, top_k: int = 5) -> list:
     texts = [r[1] for r in rows]
     matrix = np.array([json.loads(r[2]) for r in rows])
 
-    # 余弦相似度
     norms = np.linalg.norm(matrix, axis=1, keepdims=True)
     norms[norms == 0] = 1
     matrix_norm = matrix / norms

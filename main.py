@@ -32,16 +32,16 @@ client = OpenAI(
 ) if DEEPSEEK_API_KEY else None
 
 SYSTEM_PROMPT = """# 角色设定
-你是「赛诺秀医美社媒运营助手」，专为赛诺秀（Cynosure）品牌服务，负责为运营人员提供公众号和视频号的内容选题创意与方向建议。
+你是「赛诺秀医美社媒运营助手」，专为赛诺秀（Cynosure）品牌服务，负责为运营人员提供公众号和视频号的内容选题创意与方向建议，以及产品知识查询。
 
 # 品牌背景
 赛诺秀（Cynosure）是全球领先的医疗美容激光与能量设备品牌，目前在中国市场主推以下四款产品：
 
 ## 产品矩阵
-- **TempSure**：射频紧肤设备。核心卖点：无创、无痛、无需恢复期，4MHz单极射频深达真皮层，刺激胶原新生，适合面部紧致提升、减少细纹，适合敏感肌和惧怕有创项目的用户。别称：TempSure单极射频、紧致法师。
-- **PicoSure**：皮秒激光经典款。核心卖点：755nm蜂巢皮秒，祛斑/祛痘印/改善肤色，全球销量领先，临床数据成熟。
-- **PicoSure Pro**：皮秒激光升级款。别称：PicoSure Pro755细胞能量光、全能战神。核心卖点：755nm黄金波长+铂金蜂巢透镜，可祛纹身、更深层色素，肤色肤质肤感同步改善，适合复杂色素问题和敏感肌抗老。
-- **Clarity II**：双波长激光平台（755nm+1064nm）。别称：ClarityⅡ珂艾菟、状态型黑马。核心卖点：激光脱毛、焕肤紧致、血管性皮肤问题（红血丝/酒渣鼻）、色素性病变，适合全肤色人群，大光斑+IntelliTrak™智能追踪支持全身高效操作。
+- **TempSure**：射频紧肤设备。核心卖点：无创、无痛、无需恢复期，4MHz单极射频深达真皮层，刺激胶原新生，适合面部紧致提升、减少细纹，适合敏感肌和惧怕有创项目的用户。别称：TempSure单极射频。
+- **PicoSure**：皮秒激光经典款。核心卖点：755nm蜂巢皮秒，祛斑/祛痘印/改善肤色。
+- **PicoSure Pro**：皮秒激光升级款。别称：PicoSure Pro755细胞能量光。核心卖点：755nm黄金波长+铂金蜂巢透镜，可祛纹身、更深层色素，肤色肤质肤感同步改善，适合复杂色素问题和敏感肌抗老。
+- **Clarity II**：双波长激光平台（755nm+1064nm）。别称：ClarityⅡ珂艾菟。核心卖点：激光脱毛、焕肤紧致、色素性病变，适合全肤色人群，大光斑+IntelliTrak™智能追踪支持全身高效操作。
 
 ## 内容服务方向
 同时服务2B（医疗机构/医生/经销商）和2C（终端消费者）两个方向。
@@ -51,7 +51,8 @@ SYSTEM_PROMPT = """# 角色设定
 # 工作模式
 每次对话先判断用户意图：
 - 【模块一】要选题/创意/方向建议 → 联网搜索热点，结合时间节点+产品卖点输出创意方向
-- 【模块二】查产品信息/文案规范/合规要点 → 基于知识库回答
+- 【模块二】查产品信息/特点/参数/注意事项 → 详尽回答
+- 【模块三】查文案规范/合规要点 → 基于知识库回答
 
 如未说明2B/2C方向，先询问。
 
@@ -78,174 +79,48 @@ SYSTEM_PROMPT = """# 角色设定
 
 ---
 
-# 模块二：产品信息查询
+# 模块二：产品信息查询（详尽回答）
 
-直接基于知识库回答，涉及2B/2C差异时分别说明。
+当用户询问某款产品的特点、参数、适应症、禁忌症、注意事项等问题时，必须**尽可能详尽地回答**，涵盖以下所有维度：
+
+1. **产品定位**：这款设备是什么、解决什么核心问题、在赛诺秀产品线中的定位
+2. **核心技术参数**：波长、能量密度、频率、光斑尺寸、脉宽、技术原理等
+3. **适应症**：能做什么、适合哪些皮肤问题、适合哪类人群
+4. **禁忌症**：哪些情况绝对不能做、哪些情况需谨慎
+5. **治疗注意事项**：术前准备（避光/停用某些护肤品）、术中体验、术后护理（保湿/防晒/恢复期）
+6. **差异化优势**：与同类设备或竞品相比的核心优势是什么
+7. **适用场景**：2B视角（机构如何运营推广）/ 2C视角（消费者关心的问题）
+
+**回答原则：**
+- 优先引用知识库中的产品资料原文
+- 知识库没有的内容，基于品牌背景知识补充
+- 2B/2C有差异时分别说明
+- 涉及临床数据需标注来源
+- 回答要有层次感，用小标题分段，方便阅读
 
 ---
 
-# 合规提醒（用户主动问时说明）
-## 2C：严禁绝对化表述，效果描述需用"改善/辅助/有助于"，注意注册证展示
-## 2B：临床数据需标注来源，需判断是否属于"广告"范畴
+# 模块三：合规规则（用户主动问时说明）
+
+## 2C：
+- 严禁"根治""安全有效""无副作用"等绝对化表述
+- 效果描述用"改善/辅助/有助于"等非绝对化表述
+- 注意注册证号展示要求
+
+## 2B：
+- 临床数据需标注来源
+- 需判断是否属于"广告"范畴
 
 ---
 
 # 输出风格
-- 简洁、结构化，直接给方向，不啰嗦
+- 简洁、结构化，用小标题分段，方便阅读
+- 产品查询时详尽完整，不省略重要信息
+- 选题创意时直接给方向，不啰嗦
 - 中文输出
 - 结合最新热点和当前时间节点
 """
 
 
 def get_time_context() -> str:
-    now = datetime.now()
-    month = now.month
-    if month in [3, 4, 5]:
-        season, tips = "春季", "换季护肤、防晒意识觉醒、五一出行、母亲节"
-    elif month in [6, 7, 8]:
-        season, tips = "夏季", "防晒、脱毛旺季、暑期变美、端午/七夕节点、晒后修复、露肤季"
-    elif month in [9, 10, 11]:
-        season, tips = "秋季", "换季修复、光子嫩肤旺季、双十一、年底变美冲刺"
-    else:
-        season, tips = "冬季", "年货节、春节前变美、元旦跨年、冬季皮肤干燥修护"
-    return f"当前时间：{now.strftime('%Y年%m月%d日')}，{season}。营销节点参考：{tips}。"
-
-
-def tavily_search(query: str) -> str:
-    if not TAVILY_API_KEY:
-        return ""
-    try:
-        resp = httpx.post(
-            "https://api.tavily.com/search",
-            json={
-                "api_key": TAVILY_API_KEY,
-                "query": query,
-                "search_depth": "basic",
-                "max_results": 5,
-                "include_answer": True,
-            },
-            timeout=10,
-        )
-        data = resp.json()
-        results = data.get("results", [])
-        if not results:
-            return ""
-        snippets = [f"- {r.get('title','')}: {r.get('content','')[:200]}" for r in results[:5]]
-        return "【联网热点参考】\n" + "\n".join(snippets)
-    except Exception:
-        return ""
-
-
-class ChatRequest(BaseModel):
-    message: str
-    history: list = []
-    use_web_search: bool = True
-
-
-@app.get("/health")
-def health():
-    return {"status": "ok", "deepseek_configured": client is not None, "tavily_configured": bool(TAVILY_API_KEY)}
-
-
-@app.get("/documents")
-def get_documents():
-    try:
-        return {"documents": list_documents()}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.delete("/documents/{filename}")
-def remove_document(filename: str):
-    try:
-        return delete_document(filename)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
-    if not file.filename.lower().endswith((".pdf", ".docx", ".xlsx", ".xlsm", ".pptx", ".txt")):
-        raise HTTPException(status_code=400, detail="仅支持 .pdf、.docx、.xlsx、.pptx、.txt 文件")
-    content = await file.read()
-    try:
-        return ingest_document(file.filename, content)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/extract")
-async def extract_file(file: UploadFile = File(...), save_to_kb: bool = False):
-    content = await file.read()
-    try:
-        text = extract_text_any(file.filename, content)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-    kb_result = None
-    if save_to_kb:
-        try:
-            kb_result = ingest_document(file.filename, content)
-        except Exception as e:
-            kb_result = {"error": str(e)}
-
-    truncated = len(text) > 12000
-    if truncated:
-        text = text[:12000]
-
-    return {"filename": file.filename, "text": text, "truncated": truncated, "kb_result": kb_result}
-
-
-@app.post("/chat")
-def chat(req: ChatRequest):
-    if not client:
-        raise HTTPException(status_code=500, detail="DEEPSEEK_API_KEY 未配置")
-
-    try:
-        kb_results = query_knowledge_base(req.message, top_k=5)
-    except Exception:
-        kb_results = []
-
-    kb_context = ""
-    if kb_results:
-        kb_context = "\n\n# 知识库参考资料\n"
-        for r in kb_results:
-            kb_context += f"\n[来源: {r['source']}]\n{r['text']}\n"
-
-    search_context = ""
-    if req.use_web_search:
-        search_context = tavily_search(req.message)
-
-    time_context = get_time_context()
-
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    for h in req.history:
-        messages.append({"role": h["role"], "content": h["content"]})
-
-    user_content = f"{req.message}\n\n{time_context}"
-    if search_context:
-        user_content += f"\n\n{search_context}"
-    if kb_context:
-        user_content += kb_context
-
-    messages.append({"role": "user", "content": user_content})
-
-    try:
-        response = client.chat.completions.create(
-            model="deepseek-chat",
-            messages=messages,
-            max_tokens=4096,
-        )
-        reply_text = response.choices[0].message.content
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"DeepSeek API 调用失败: {str(e)}")
-
-    return {"reply": reply_text, "kb_sources": [r["source"] for r in kb_results]}
-
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-
-@app.get("/")
-def root():
-    return FileResponse("static/index.html")
+    now =

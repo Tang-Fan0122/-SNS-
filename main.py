@@ -187,7 +187,10 @@ def remove_document(filename: str):
 
 
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(file: UploadFile = File(...), password: str = ""):
+    upload_pwd = os.environ.get("UPLOAD_PASSWORD", "")
+    if upload_pwd and password != upload_pwd:
+        raise HTTPException(status_code=403, detail="密码错误，无权上传")
     if not file.filename.lower().endswith((".pdf", ".docx", ".xlsx", ".xlsm", ".pptx", ".txt")):
         raise HTTPException(status_code=400, detail="仅支持 .pdf、.docx、.xlsx、.pptx、.txt 文件")
     content = await file.read()
@@ -195,10 +198,17 @@ async def upload_file(file: UploadFile = File(...)):
         return ingest_document(file.filename, content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
+    content = await file.read()
+    try:
+        return ingest_document(file.filename, content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 @app.post("/extract")
-async def extract_file(file: UploadFile = File(...), save_to_kb: bool = False):
+async def extract_file(file: UploadFile = File(...), save_to_kb: bool = False, password: str = ""):
+    if save_to_kb:
+        upload_pwd = os.environ.get("UPLOAD_PASSWORD", "")
+        if upload_pwd and password != upload_pwd:
+            raise HTTPException(status_code=403, detail="密码错误，无权存入知识库")
     content = await file.read()
     try:
         text = extract_text_any(file.filename, content)

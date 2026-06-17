@@ -181,18 +181,8 @@ function toggleCat(id) {
 }
 
 function autoExpand() {
-  ['product','2b','2c'].forEach(cat => {
-    const list = document.getElementById('list-' + cat);
-    if (list && list.children.length > 0) {
-      const el = document.getElementById('cat-' + cat);
-      if (!el.classList.contains('open')) {
-        el.classList.add('open');
-        el.querySelector('.kb-cat-body').style.display = 'block';
-      }
-    }
-  });
+  // 默认全部收起，点击才展开
 }
-
 async function handleUpload(input, category, statusId) {
   const files = Array.from(input.files);
   const statusEl = document.getElementById(statusId);

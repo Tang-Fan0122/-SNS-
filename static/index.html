@@ -31,7 +31,7 @@
   .kb-cat-header .chevron { font-size: 10px; color: #a39b8c; transition: transform 0.2s; }
   .kb-cat.open .chevron { transform: rotate(180deg); }
   .kb-cat-body { display: none; padding: 8px 10px; border-top: 1px solid var(--line); background: #fdfcf9; }
-  .kb-cat.open .kb-cat-body { display: block; }
+ .kb-cat.open .kb-cat-body { display: block !important; }
   .upload-btn-small { display: block; width: 100%; border: 1px dashed var(--line); border-radius: 4px; padding: 7px 10px; text-align: center; cursor: pointer; font-size: 11.5px; color: #8a8378; background: transparent; transition: border-color 0.15s, background 0.15s; margin-bottom: 8px; }
   .upload-btn-small:hover { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
   .upload-btn-small input { display: none; }
@@ -169,7 +169,14 @@ let pendingAttachment = null;
 const CAT_PREFIX = { product: '[产品]', '2b': '[2B]', '2c': '[2C]' };
 
 function toggleCat(id) {
-  document.getElementById(id).classList.toggle('open');
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+  const body = el.querySelector('.kb-cat-body');
+  if (el.classList.contains('open')) {
+    body.style.display = 'block';
+  } else {
+    body.style.display = 'none';
+  }
 }
 
 function autoExpand() {

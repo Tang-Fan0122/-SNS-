@@ -36,7 +36,7 @@
   .upload-btn-small:hover { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
   .upload-btn-small input { display: none; }
   .upload-status-small { font-size: 11px; color: var(--accent); min-height: 14px; margin-bottom: 4px; }
-  .doc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .doc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; }
   .doc-item { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 5px 8px; gap: 6px; }
   .doc-item span.name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); font-size: 10.5px; flex: 1; }
   .doc-item button { border: none; background: none; color: #b56a5a; cursor: pointer; font-size: 11px; flex-shrink: 0; padding: 0; }
@@ -72,11 +72,10 @@
   .attached-name { font-family: var(--mono); color: var(--accent); font-size: 11px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   @media (max-width: 768px) {
     .layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-    .sidebar { border-right: none; border-bottom: 1px solid var(--line); padding: 12px; flex-direction: row; flex-wrap: wrap; align-items: flex-start; gap: 8px; max-height: 45vh; }
+    .sidebar { border-right: none; border-bottom: 1px solid var(--line); padding: 12px; flex-direction: row; flex-wrap: wrap; align-items: flex-start; gap: 8px; max-height: 50vh; overflow-y: auto; }
     .brand { flex: 1; border-bottom: none; padding-bottom: 0; font-size: 15px; }
     .brand small { display: none; }
-    .kb-categories { flex-direction: row; flex-wrap: wrap; width: 100%; }
-    .kb-cat { min-width: 140px; flex: 1; }
+    .kb-categories { flex-direction: column; width: 100%; }
     .meta-note { display: none; }
     .chat-window { padding: 16px; }
     .input-bar { padding: 10px 16px 14px; }
@@ -88,6 +87,7 @@
   <aside class="sidebar">
     <div class="brand">赛诺秀社媒运营助手<small>Knowledge Base · Agent</small></div>
     <div class="kb-categories">
+
       <div class="kb-cat" id="cat-product">
         <div class="kb-cat-header" onclick="toggleCat('cat-product')">
           <div class="cat-left"><span class="cat-icon">📋</span><span>产品资料</span><span class="cat-count" id="count-product">0</span></div>
@@ -101,13 +101,63 @@
           <ul class="doc-list" id="list-product"></ul>
         </div>
       </div>
+
       <div class="kb-cat" id="cat-2b">
         <div class="kb-cat-header" onclick="toggleCat('cat-2b')">
           <div class="cat-left"><span class="cat-icon">🏥</span><span>2B往期文章</span><span class="cat-count" id="count-2b">0</span></div>
           <span class="chevron">▼</span>
         </div>
         <div class="kb-cat-body">
-          <script>
+          <label class="upload-btn-small">+ 上传2B文章(Word/PDF/Excel)
+            <input type="file" accept=".pdf,.docx,.xlsx,.xlsm,.pptx,.txt" multiple onchange="handleUpload(this,'2b','status-2b')" />
+          </label>
+          <div class="upload-status-small" id="status-2b"></div>
+          <ul class="doc-list" id="list-2b"></ul>
+        </div>
+      </div>
+
+      <div class="kb-cat" id="cat-2c">
+        <div class="kb-cat-header" onclick="toggleCat('cat-2c')">
+          <div class="cat-left"><span class="cat-icon">✨</span><span>2C往期文章</span><span class="cat-count" id="count-2c">0</span></div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="kb-cat-body">
+          <label class="upload-btn-small">+ 上传2C文章(Word/PDF/Excel)
+            <input type="file" accept=".pdf,.docx,.xlsx,.xlsm,.pptx,.txt" multiple onchange="handleUpload(this,'2c','status-2c')" />
+          </label>
+          <div class="upload-status-small" id="status-2c"></div>
+          <ul class="doc-list" id="list-2c"></ul>
+        </div>
+      </div>
+
+    </div>
+    <div class="meta-note">上传资料后即可作为知识库引用。<br/>对话时模型会自动检索相关内容。</div>
+  </aside>
+
+  <main class="main">
+    <div class="chat-window" id="chatWindow">
+      <div class="empty-state" id="emptyState">
+        <h2>开始一次对话</h2>
+        <p>例如：「2C方向，结合当下热点给我3个选题」<br/>或「详细介绍一下TempSure的产品特点」</p>
+      </div>
+    </div>
+    <div class="input-bar">
+      <div class="input-row">
+        <label class="attach-btn" id="attachBtn" title="附件上传到本次对话">📎
+          <input type="file" id="attachInput" accept=".pdf,.docx,.xlsx,.xlsm,.pptx,.txt" style="display:none" />
+        </label>
+        <textarea id="messageInput" placeholder="输入你的需求…" rows="1"></textarea>
+        <button class="send-btn" id="sendBtn">发送</button>
+      </div>
+      <div class="input-options">
+        <label><input type="checkbox" id="webSearchToggle" checked /> 联网搜索热点</label>
+        <label><input type="checkbox" id="saveToKbToggle" /> 附件同时存入知识库</label>
+        <span id="attachedFileName" class="attached-name"></span>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
 const chatWindow = document.getElementById('chatWindow');
 const emptyState = document.getElementById('emptyState');
 const messageInput = document.getElementById('messageInput');
@@ -124,9 +174,10 @@ const CAT_PREFIX = { product: '[产品]', '2b': '[2B]', '2c': '[2C]' };
 
 function toggleCat(id) {
   const el = document.getElementById(id);
+  const isOpen = el.classList.contains('open');
   el.classList.toggle('open');
   const body = el.querySelector('.kb-cat-body');
-  body.style.display = el.classList.contains('open') ? 'block' : 'none';
+  body.style.display = isOpen ? 'none' : 'block';
 }
 
 function autoExpand() {
@@ -134,8 +185,10 @@ function autoExpand() {
     const list = document.getElementById('list-' + cat);
     if (list && list.children.length > 0) {
       const el = document.getElementById('cat-' + cat);
-      el.classList.add('open');
-      el.querySelector('.kb-cat-body').style.display = 'block';
+      if (!el.classList.contains('open')) {
+        el.classList.add('open');
+        el.querySelector('.kb-cat-body').style.display = 'block';
+      }
     }
   });
 }
@@ -145,17 +198,20 @@ async function handleUpload(input, category, statusId) {
   const statusEl = document.getElementById(statusId);
   const prefix = CAT_PREFIX[category];
   for (const file of files) {
-    statusEl.textContent = `正在上传 ${file.name}...`;
-    const renamedFile = new File([file], `${prefix}${file.name}`, { type: file.type });
+    statusEl.textContent = '正在上传 ' + file.name + '...';
+    const renamedFile = new File([file], prefix + file.name, { type: file.type });
     const formData = new FormData();
     formData.append('file', renamedFile);
     try {
       const res = await fetch('/upload', { method: 'POST', body: formData });
-      if (!res.ok) { const err = await res.json(); throw new Error(err.detail || '上传失败'); }
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || '上传失败');
+      }
       const data = await res.json();
-      statusEl.textContent = `${file.name} 已导入，共 ${data.chunks_added} 段`;
+      statusEl.textContent = file.name + ' 已导入，共 ' + data.chunks_added + ' 段';
     } catch (e) {
-      statusEl.textContent = `${file.name} 上传失败: ${e.message}`;
+      statusEl.textContent = file.name + ' 上传失败: ' + e.message;
     }
   }
   input.value = '';
@@ -168,38 +224,50 @@ async function loadDocuments() {
     const data = await res.json();
     const docs = data.documents || [];
     const groups = { product: [], '2b': [], '2c': [] };
-    docs.forEach(name => {
+    docs.forEach(function(name) {
       if (name.startsWith('[产品]')) groups.product.push(name);
       else if (name.startsWith('[2B]')) groups['2b'].push(name);
       else if (name.startsWith('[2C]')) groups['2c'].push(name);
+      else groups.product.push(name);
     });
-    Object.entries(groups).forEach(([cat, files]) => {
+    Object.keys(groups).forEach(function(cat) {
+      const files = groups[cat];
       const list = document.getElementById('list-' + cat);
       const count = document.getElementById('count-' + cat);
       if (!list) return;
       list.innerHTML = '';
       count.textContent = files.length;
-      files.forEach(name => {
+      files.forEach(function(name) {
         const displayName = name.replace(/^\[产品\]|\[2B\]|\[2C\]/, '');
         const li = document.createElement('li');
         li.className = 'doc-item';
-        li.innerHTML = `<span class="name" title="${displayName}">${displayName}</span><button data-name="${name}">删除</button>`;
-        list.appendChild(li);
-      });
-      list.querySelectorAll('button').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          await fetch(`/documents/${encodeURIComponent(btn.dataset.name)}`, { method: 'DELETE' });
+        const span = document.createElement('span');
+        span.className = 'name';
+        span.title = displayName;
+        span.textContent = displayName;
+        const btn = document.createElement('button');
+        btn.textContent = '删除';
+        btn.dataset.name = name;
+        btn.addEventListener('click', async function() {
+          await fetch('/documents/' + encodeURIComponent(name), { method: 'DELETE' });
           loadDocuments();
         });
+        li.appendChild(span);
+        li.appendChild(btn);
+        list.appendChild(li);
       });
     });
     autoExpand();
-  } catch (e) { console.error(e); }
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 function renderMarkdown(text) {
   return text
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
     .replace(/^### (.*$)/gim, '<h4>$1</h4>')
     .replace(/^## (.*$)/gim, '<h3>$1</h3>')
     .replace(/^# (.*$)/gim, '<h2>$1</h2>')
@@ -211,12 +279,15 @@ function renderMarkdown(text) {
 function addMessage(role, text, sources) {
   emptyState.style.display = 'none';
   const div = document.createElement('div');
-  div.className = `msg ${role}`;
+  div.className = 'msg ' + role;
   div.innerHTML = renderMarkdown(text);
   if (sources && sources.length > 0) {
     const srcDiv = document.createElement('div');
     srcDiv.className = 'sources';
-    srcDiv.textContent = '参考资料: ' + [...new Set(sources)].map(s => s.replace(/^\[产品\]|\[2B\]|\[2C\]/, '')).join(', ');
+    const cleaned = [...new Set(sources)].map(function(s) {
+      return s.replace(/^\[产品\]|\[2B\]|\[2C\]/, '');
+    });
+    srcDiv.textContent = '参考资料: ' + cleaned.join(', ');
     div.appendChild(srcDiv);
   }
   chatWindow.appendChild(div);
@@ -224,33 +295,44 @@ function addMessage(role, text, sources) {
   return div;
 }
 
-messageInput.addEventListener('input', () => {
+messageInput.addEventListener('input', function() {
   messageInput.style.height = 'auto';
   messageInput.style.height = Math.min(messageInput.scrollHeight, 160) + 'px';
 });
-messageInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+
+messageInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
 });
+
 sendBtn.addEventListener('click', sendMessage);
 
 async function sendMessage() {
   const text = messageInput.value.trim();
   if (!text && !pendingAttachment) return;
+
   let displayText = text;
   let payloadText = text;
+
   if (pendingAttachment) {
-    displayText = `${text}\n\n📎 附件: ${pendingAttachment.filename}`;
-    payloadText = `${text}\n\n# 附件内容（来自 ${pendingAttachment.filename}）\n${pendingAttachment.text}`;
+    displayText = text + '\n\n📎 附件: ' + pendingAttachment.filename;
+    payloadText = text + '\n\n# 附件内容（来自 ' + pendingAttachment.filename + '）\n' + pendingAttachment.text;
   }
+
   addMessage('user', displayText || '（仅上传附件）');
   history.push({ role: 'user', content: payloadText || '请分析这份附件内容' });
   messageInput.value = '';
   messageInput.style.height = 'auto';
   sendBtn.disabled = true;
+
   pendingAttachment = null;
   attachBtn.classList.remove('has-file');
   attachedFileName.textContent = '';
+
   const loadingDiv = addMessage('assistant', '<span class="loading-dots">思考中</span>');
+
   try {
     const res = await fetch('/chat', {
       method: 'POST',
@@ -261,43 +343,55 @@ async function sendMessage() {
         use_web_search: webSearchToggle.checked,
       }),
     });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || '请求失败'); }
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || '请求失败');
+    }
     const data = await res.json();
     loadingDiv.innerHTML = renderMarkdown(data.reply);
     if (data.kb_sources && data.kb_sources.length > 0) {
       const srcDiv = document.createElement('div');
       srcDiv.className = 'sources';
-      srcDiv.textContent = '参考资料: ' + [...new Set(data.kb_sources)].map(s => s.replace(/^\[产品\]|\[2B\]|\[2C\]/, '')).join(', ');
+      const cleaned = [...new Set(data.kb_sources)].map(function(s) {
+        return s.replace(/^\[产品\]|\[2B\]|\[2C\]/, '');
+      });
+      srcDiv.textContent = '参考资料: ' + cleaned.join(', ');
       loadingDiv.appendChild(srcDiv);
     }
     history.push({ role: 'assistant', content: data.reply });
   } catch (e) {
-    loadingDiv.innerHTML = `<span style="color:#b56a5a;">出错了: ${e.message}</span>`;
+    loadingDiv.innerHTML = '<span style="color:#b56a5a;">出错了: ' + e.message + '</span>';
   } finally {
     sendBtn.disabled = false;
     chatWindow.scrollTop = chatWindow.scrollHeight;
   }
 }
 
-attachInput.addEventListener('change', async () => {
+attachInput.addEventListener('change', async function() {
   const file = attachInput.files[0];
   if (!file) return;
-  attachedFileName.textContent = `正在解析 ${file.name}...`;
+  attachedFileName.textContent = '正在解析 ' + file.name + '...';
   const formData = new FormData();
   formData.append('file', file);
   try {
-    const res = await fetch(`/extract?save_to_kb=${saveToKbToggle.checked}`, { method: 'POST', body: formData });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || '解析失败'); }
+    const res = await fetch('/extract?save_to_kb=' + saveToKbToggle.checked, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || '解析失败');
+    }
     const data = await res.json();
     pendingAttachment = data;
     attachBtn.classList.add('has-file');
-    attachedFileName.textContent = `已附加: ${file.name}${data.truncated ? '（已截断）' : ''}`;
+    attachedFileName.textContent = '已附加: ' + file.name + (data.truncated ? '（已截断）' : '');
     if (saveToKbToggle.checked && data.kb_result && !data.kb_result.error) {
       attachedFileName.textContent += '，已存入知识库';
       loadDocuments();
     }
   } catch (e) {
-    attachedFileName.textContent = `解析失败: ${e.message}`;
+    attachedFileName.textContent = '解析失败: ' + e.message;
     pendingAttachment = null;
   }
   attachInput.value = '';

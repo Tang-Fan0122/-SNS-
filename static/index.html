@@ -22,16 +22,17 @@
   .brand { font-family: var(--serif); font-size: 17px; font-weight: 600; letter-spacing: 0.02em; border-bottom: 2px solid var(--accent); padding-bottom: 10px; flex-shrink: 0; }
   .brand small { display: block; font-family: var(--sans); font-size: 10px; font-weight: 400; color: #8a8378; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 3px; }
   .kb-categories { display: flex; flex-direction: column; gap: 8px; }
-  .kb-cat { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #fff; }
-  .kb-cat-header { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; cursor: pointer; user-select: none; transition: background 0.15s; }
+  .kb-cat { border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  .kb-cat-header { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; cursor: pointer; user-select: none; transition: background 0.15s; border-radius: 6px; }
   .kb-cat-header:hover { background: var(--accent-soft); }
   .kb-cat-header .cat-left { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--ink); }
   .kb-cat-header .cat-icon { font-size: 14px; }
   .kb-cat-header .cat-count { font-size: 10px; background: var(--accent-soft); color: var(--accent); border-radius: 10px; padding: 1px 6px; font-weight: 600; }
   .kb-cat-header .chevron { font-size: 10px; color: #a39b8c; transition: transform 0.2s; }
-  .kb-cat.open .chevron { transform: rotate(180deg); }
-  .kb-cat-body { display: none; padding: 8px 10px; border-top: 1px solid var(--line); background: #fdfcf9; }
+  .kb-cat-body { display: none; padding: 8px 10px; border-top: 1px solid var(--line); background: #fdfcf9; border-radius: 0 0 6px 6px; }
+  .kb-cat.open .kb-cat-header { border-radius: 6px 6px 0 0; }
   .kb-cat.open .kb-cat-body { display: block; }
+  .kb-cat.open .chevron { transform: rotate(180deg); }
   .upload-btn-small { display: block; width: 100%; border: 1px dashed var(--line); border-radius: 4px; padding: 7px 10px; text-align: center; cursor: pointer; font-size: 11.5px; color: #8a8378; background: transparent; transition: border-color 0.15s, background 0.15s; margin-bottom: 8px; }
   .upload-btn-small:hover { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
   .upload-btn-small input { display: none; }
@@ -72,10 +73,9 @@
   .attached-name { font-family: var(--mono); color: var(--accent); font-size: 11px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   @media (max-width: 768px) {
     .layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-    .sidebar { border-right: none; border-bottom: 1px solid var(--line); padding: 12px; flex-direction: row; flex-wrap: wrap; align-items: flex-start; gap: 8px; max-height: 50vh; overflow-y: auto; }
-    .brand { flex: 1; border-bottom: none; padding-bottom: 0; font-size: 15px; }
+    .sidebar { border-right: none; border-bottom: 1px solid var(--line); padding: 12px; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; }
+    .brand { border-bottom: none; padding-bottom: 0; font-size: 15px; }
     .brand small { display: none; }
-    .kb-categories { flex-direction: column; width: 100%; }
     .meta-note { display: none; }
     .chat-window { padding: 16px; }
     .input-bar { padding: 10px 16px 14px; }
@@ -87,7 +87,6 @@
   <aside class="sidebar">
     <div class="brand">赛诺秀社媒运营助手<small>Knowledge Base · Agent</small></div>
     <div class="kb-categories">
-
       <div class="kb-cat" id="cat-product">
         <div class="kb-cat-header" onclick="toggleCat('cat-product')">
           <div class="cat-left"><span class="cat-icon">📋</span><span>产品资料</span><span class="cat-count" id="count-product">0</span></div>
@@ -101,7 +100,6 @@
           <ul class="doc-list" id="list-product"></ul>
         </div>
       </div>
-
       <div class="kb-cat" id="cat-2b">
         <div class="kb-cat-header" onclick="toggleCat('cat-2b')">
           <div class="cat-left"><span class="cat-icon">🏥</span><span>2B往期文章</span><span class="cat-count" id="count-2b">0</span></div>
@@ -115,7 +113,6 @@
           <ul class="doc-list" id="list-2b"></ul>
         </div>
       </div>
-
       <div class="kb-cat" id="cat-2c">
         <div class="kb-cat-header" onclick="toggleCat('cat-2c')">
           <div class="cat-left"><span class="cat-icon">✨</span><span>2C往期文章</span><span class="cat-count" id="count-2c">0</span></div>
@@ -129,11 +126,9 @@
           <ul class="doc-list" id="list-2c"></ul>
         </div>
       </div>
-
     </div>
     <div class="meta-note">上传资料后即可作为知识库引用。<br/>对话时模型会自动检索相关内容。</div>
   </aside>
-
   <main class="main">
     <div class="chat-window" id="chatWindow">
       <div class="empty-state" id="emptyState">
@@ -171,13 +166,11 @@ const saveToKbToggle = document.getElementById('saveToKbToggle');
 let history = [];
 let pendingAttachment = null;
 const CAT_PREFIX = { product: '[产品]', '2b': '[2B]', '2c': '[2C]' };
+
 function toggleCat(id) {
-  const el = document.getElementById(id);
-  el.classList.toggle('open');
+  document.getElementById(id).classList.toggle('open');
 }
-function autoExpand() {
-  // 默认全部收起，点击才展开
-}
+
 async function handleUpload(input, category, statusId) {
   const files = Array.from(input.files);
   if (files.length === 0) return;
@@ -192,13 +185,7 @@ async function handleUpload(input, category, statusId) {
     formData.append('file', renamedFile);
     formData.append('password', password);
     try {
- let extractUrl = '/extract?save_to_kb=' + saveToKbToggle.checked;
-if (saveToKbToggle.checked) {
-  const pwd = prompt('存入知识库需要验证密码：');
-  if (!pwd) { attachInput.value = ''; return; }
-  extractUrl += '&password=' + encodeURIComponent(pwd);
-}
-const res = await fetch(extractUrl, {
+      const res = await fetch('/upload', { method: 'POST', body: formData });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.detail || '上传失败');
@@ -209,6 +196,9 @@ const res = await fetch(extractUrl, {
       statusEl.textContent = file.name + ' 上传失败: ' + e.message;
     }
   }
+  input.value = '';
+  loadDocuments();
+}
 
 async function loadDocuments() {
   try {
@@ -241,15 +231,20 @@ async function loadDocuments() {
         btn.textContent = '删除';
         btn.dataset.name = name;
         btn.addEventListener('click', async function() {
-          await fetch('/documents/' + encodeURIComponent(name), { method: 'DELETE' });
-          loadDocuments();
+          const pwd = prompt('请输入密码确认删除：');
+          if (!pwd) return;
+          const res = await fetch('/documents/' + encodeURIComponent(name) + '?password=' + encodeURIComponent(pwd), { method: 'DELETE' });
+          if (res.ok) {
+            loadDocuments();
+          } else {
+            alert('删除失败：密码错误');
+          }
         });
         li.appendChild(span);
         li.appendChild(btn);
         list.appendChild(li);
       });
     });
-    autoExpand();
   } catch (e) {
     console.error(e);
   }
@@ -304,27 +299,21 @@ sendBtn.addEventListener('click', sendMessage);
 async function sendMessage() {
   const text = messageInput.value.trim();
   if (!text && !pendingAttachment) return;
-
   let displayText = text;
   let payloadText = text;
-
   if (pendingAttachment) {
     displayText = text + '\n\n📎 附件: ' + pendingAttachment.filename;
     payloadText = text + '\n\n# 附件内容（来自 ' + pendingAttachment.filename + '）\n' + pendingAttachment.text;
   }
-
   addMessage('user', displayText || '（仅上传附件）');
   history.push({ role: 'user', content: payloadText || '请分析这份附件内容' });
   messageInput.value = '';
   messageInput.style.height = 'auto';
   sendBtn.disabled = true;
-
   pendingAttachment = null;
   attachBtn.classList.remove('has-file');
   attachedFileName.textContent = '';
-
   const loadingDiv = addMessage('assistant', '<span class="loading-dots">思考中</span>');
-
   try {
     const res = await fetch('/chat', {
       method: 'POST',
@@ -366,10 +355,13 @@ attachInput.addEventListener('change', async function() {
   const formData = new FormData();
   formData.append('file', file);
   try {
-    const res = await fetch('/extract?save_to_kb=' + saveToKbToggle.checked, {
-      method: 'POST',
-      body: formData,
-    });
+    let extractUrl = '/extract?save_to_kb=' + saveToKbToggle.checked;
+    if (saveToKbToggle.checked) {
+      const pwd = prompt('存入知识库需要验证密码：');
+      if (!pwd) { attachInput.value = ''; return; }
+      extractUrl += '&password=' + encodeURIComponent(pwd);
+    }
+    const res = await fetch(extractUrl, { method: 'POST', body: formData });
     if (!res.ok) {
       const err = await res.json();
       throw new Error(err.detail || '解析失败');

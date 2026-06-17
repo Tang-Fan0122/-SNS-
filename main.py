@@ -72,9 +72,9 @@ SYSTEM_PROMPT = """# 角色设定
 ## 视频号创意形式（按需选用）
 - **金句快剪型**：15-30秒高能观点句，开头用反问/数据/争议观点，字幕高亮关键词
 - **热点嫁接型**：热点话题引入 + 专家观点作背书
-- **问答拆解型**：长采访拆成多条"一问一答"系列
+- **问答拆解型**：长采访拆成多条一问一答系列
 - **反差/悬念开头**：专家颠覆性结论前半句做封面悬念
-- **数字化包装**：口述内容提炼为"3个要点/5个误区"信息图叠加画面
+- **数字化包装**：口述内容提炼为3个要点/5个误区信息图叠加画面
 - **跨平台复用**：视频号短视频引流，公众号发完整图文版
 
 ---
@@ -87,7 +87,7 @@ SYSTEM_PROMPT = """# 角色设定
 2. **核心技术参数**：波长、能量密度、频率、光斑尺寸、脉宽、技术原理等
 3. **适应症**：能做什么、适合哪些皮肤问题、适合哪类人群
 4. **禁忌症**：哪些情况绝对不能做、哪些情况需谨慎
-5. **治疗注意事项**：术前准备（避光/停用某些护肤品）、术中体验、术后护理（保湿/防晒/恢复期）
+5. **治疗注意事项**：术前准备、术中体验、术后护理（保湿/防晒/恢复期）
 6. **差异化优势**：与同类设备或竞品相比的核心优势是什么
 7. **适用场景**：2B视角（机构如何运营推广）/ 2C视角（消费者关心的问题）
 
@@ -103,13 +103,13 @@ SYSTEM_PROMPT = """# 角色设定
 # 模块三：合规规则（用户主动问时说明）
 
 ## 2C：
-- 严禁"根治""安全有效""无副作用"等绝对化表述
-- 效果描述用"改善/辅助/有助于"等非绝对化表述
+- 严禁根治、安全有效、无副作用等绝对化表述
+- 效果描述用改善/辅助/有助于等非绝对化表述
 - 注意注册证号展示要求
 
 ## 2B：
 - 临床数据需标注来源
-- 需判断是否属于"广告"范畴
+- 需判断是否属于广告范畴
 
 ---
 
@@ -120,7 +120,155 @@ SYSTEM_PROMPT = """# 角色设定
 - 中文输出
 - 结合最新热点和当前时间节点
 """
-
-
 def get_time_context() -> str:
-    now =
+    now = datetime.now()
+    month = now.month
+    if month in [3, 4, 5]:
+        season, tips = "春季", "换季护肤、防晒意识觉醒、五一出行、母亲节"
+    elif month in [6, 7, 8]:
+        season, tips = "夏季", "防晒、脱毛旺季、暑期变美、端午/七夕节点、晒后修复、露肤季"
+    elif month in [9, 10, 11]:
+        season, tips = "秋季", "换季修复、年底变美冲刺"
+    else:
+        season, tips = "冬季", "年货节、春节前变美、元旦跨年、冬季皮肤干燥修护"
+    return f"当前时间：{now.strftime('%Y年%m月%d日')}，{season}。营销节点参考：{tips}。"
+
+
+def tavily_search(query: str) -> str:
+    if not TAVILY_API_KEY:
+        return ""
+    try:
+        resp = httpx.post(
+            "https://api.tavily.com/search",
+            json={
+                "api_key": TAVILY_API_KEY,
+                "query": query,
+                "search_depth": "basic",
+                "max_results": 5,
+                "include_answer": True,
+            },
+            timeout=10,
+        )
+        data = resp.json()
+        results = data.get("results", [])
+        if not results:
+            return ""
+        snippets = [f"- {r.get('title','')}: {r.get('content','')[:200]}" for r in results[:5]]
+        return "【联网热点参考】\n" + "\n".join(snippets)
+    except Exception:
+        return ""
+
+
+class ChatRequest(BaseModel):
+    message: str
+    history: list = []
+    use_web_search: bool = True
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "deepseek_configured": client is not None, "tavily_configured": bool(TAVILY_API_KEY)}
+
+
+@app.get("/documents")
+def get_documents():
+    try:
+        return {"documents": list_documents()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/documents/{filename}")
+def remove_document(filename: str):
+    try:
+        return delete_document(filename)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    if not file.filename.lower().endswith((".pdf", ".docx", ".xlsx", ".xlsm", ".pptx", ".txt")):
+        raise HTTPException(status_code=400, detail="仅支持 .pdf、.docx、.xlsx、.pptx、.txt 文件")
+    content = await file.read()
+    try:
+        return ingest_document(file.filename, content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/extract")
+async def extract_file(file: UploadFile = File(...), save_to_kb: bool = False):
+    content = await file.read()
+    try:
+        text = extract_text_any(file.filename, content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    kb_result = None
+    if save_to_kb:
+        try:
+            kb_result = ingest_document(file.filename, content)
+        except Exception as e:
+            kb_result = {"error": str(e)}
+
+    truncated = len(text) > 12000
+    if truncated:
+        text = text[:12000]
+
+    return {"filename": file.filename, "text": text, "truncated": truncated, "kb_result": kb_result}
+
+
+@app.post("/chat")
+def chat(req: ChatRequest):
+    if not client:
+        raise HTTPException(status_code=500, detail="DEEPSEEK_API_KEY 未配置")
+
+    try:
+        kb_results = query_knowledge_base(req.message, top_k=5)
+    except Exception:
+        kb_results = []
+
+    kb_context = ""
+    if kb_results:
+        kb_context = "\n\n# 知识库参考资料\n"
+        for r in kb_results:
+            kb_context += f"\n[来源: {r['source']}]\n{r['text']}\n"
+
+    search_context = ""
+    if req.use_web_search:
+        search_context = tavily_search(req.message)
+
+    time_context = get_time_context()
+
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    for h in req.history:
+        messages.append({"role": h["role"], "content": h["content"]})
+
+    user_content = f"{req.message}\n\n{time_context}"
+    if search_context:
+        user_content += f"\n\n{search_context}"
+    if kb_context:
+        user_content += kb_context
+
+    messages.append({"role": "user", "content": user_content})
+
+    try:
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=messages,
+            max_tokens=4096,
+        )
+        reply_text = response.choices[0].message.content
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DeepSeek API 调用失败: {str(e)}")
+
+    return {"reply": reply_text, "kb_sources": [r["source"] for r in kb_results]}
+
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.get("/")
+def root():
+    return FileResponse("static/index.html")

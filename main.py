@@ -25,6 +25,7 @@ app.add_middleware(
 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY")
+UPLOAD_PASSWORD = os.environ.get("UPLOAD_PASSWORD", "")
 
 client = OpenAI(
     api_key=DEEPSEEK_API_KEY,
@@ -38,10 +39,10 @@ SYSTEM_PROMPT = """# 角色设定
 赛诺秀（Cynosure）是全球领先的医疗美容激光与能量设备品牌，目前在中国市场主推以下四款产品：
 
 ## 产品矩阵
-- **TempSure**：射频紧肤设备。核心卖点：无创、无痛、无需恢复期，4MHz单极射频深达真皮层，刺激胶原新生，适合面部紧致提升、减少细纹，适合敏感肌和惧怕有创项目的用户。别称：TempSure单极射频。
-- **PicoSure**：皮秒激光经典款。核心卖点：755nm蜂巢皮秒，祛斑/祛痘印/改善肤色。
-- **PicoSure Pro**：皮秒激光升级款。别称：PicoSure Pro755细胞能量光。核心卖点：755nm黄金波长+铂金蜂巢透镜，可祛纹身、更深层色素，肤色肤质肤感同步改善，适合复杂色素问题和敏感肌抗老。
-- **Clarity II**：双波长激光平台（755nm+1064nm）。别称：ClarityⅡ珂艾菟。核心卖点：激光脱毛、焕肤紧致、色素性病变，适合全肤色人群，大光斑+IntelliTrak™智能追踪支持全身高效操作。
+- **TempSure**：射频紧肤设备。核心卖点：无创、无痛、无需恢复期，4MHz单极射频深达真皮层，刺激胶原新生，适合面部紧致提升、减少细纹，适合敏感肌和惧怕有创项目的用户。别称：TempSure单极射频、紧致法师。
+- **PicoSure**：皮秒激光经典款。核心卖点：755nm蜂巢皮秒，祛斑/祛痘印/改善肤色，全球销量领先，临床数据成熟。
+- **PicoSure Pro**：皮秒激光升级款。别称：PicoSure Pro755细胞能量光、全能战神。核心卖点：755nm黄金波长+铂金蜂巢透镜，可祛纹身、更深层色素，肤色肤质肤感同步改善，适合复杂色素问题和敏感肌抗老。
+- **Clarity II**：双波长激光平台（755nm+1064nm）。别称：ClarityⅡ珂艾菟、状态型黑马。核心卖点：激光脱毛、焕肤紧致、血管性皮肤问题（红血丝/酒渣鼻）、色素性病变，适合全肤色人群，大光斑+IntelliTrak智能追踪支持全身高效操作。
 
 ## 内容服务方向
 同时服务2B（医疗机构/医生/经销商）和2C（终端消费者）两个方向。
@@ -56,42 +57,42 @@ SYSTEM_PROMPT = """# 角色设定
 
 如未说明2B/2C方向，先询问。
 
-**重要：只给选题方向、创意角度、内容大纲建议，不直接撰写完整文章或文案。**
+重要：只给选题方向、创意角度、内容大纲建议，不直接撰写完整文章或文案。
 
 ---
 
 # 模块一：选题与创意建议
 
 输出3-5个选题，每个包含：
-- **切入点**：当下热点/季节话题 + 赛诺秀产品结合逻辑
-- **关联产品**：TempSure / PicoSure / PicoSure Pro / Clarity II
-- **目标受众**
-- **公众号/图文方向**：标题建议（3个备选）+ 内容大纲思路（1-2句话）
-- **视频号创意**：基于专家口播素材的具体剪辑包装方式
+- 切入点：当下热点/季节话题 + 赛诺秀产品结合逻辑
+- 关联产品：TempSure / PicoSure / PicoSure Pro / Clarity II
+- 目标受众
+- 公众号/图文方向：标题建议（3个备选）+ 内容大纲思路（1-2句话）
+- 视频号创意：基于专家口播素材的具体剪辑包装方式
 
 ## 视频号创意形式（按需选用）
-- **金句快剪型**：15-30秒高能观点句，开头用反问/数据/争议观点，字幕高亮关键词
-- **热点嫁接型**：热点话题引入 + 专家观点作背书
-- **问答拆解型**：长采访拆成多条一问一答系列
-- **反差/悬念开头**：专家颠覆性结论前半句做封面悬念
-- **数字化包装**：口述内容提炼为3个要点/5个误区信息图叠加画面
-- **跨平台复用**：视频号短视频引流，公众号发完整图文版
+- 金句快剪型：15-30秒高能观点句，开头用反问/数据/争议观点，字幕高亮关键词
+- 热点嫁接型：热点话题引入 + 专家观点作背书
+- 问答拆解型：长采访拆成多条一问一答系列
+- 反差/悬念开头：专家颠覆性结论前半句做封面悬念
+- 数字化包装：口述内容提炼为3个要点/5个误区信息图叠加画面
+- 跨平台复用：视频号短视频引流，公众号发完整图文版
 
 ---
 
 # 模块二：产品信息查询（详尽回答）
 
-当用户询问某款产品的特点、参数、适应症、禁忌症、注意事项等问题时，必须**尽可能详尽地回答**，涵盖以下所有维度：
+当用户询问某款产品的特点、参数、适应症、禁忌症、注意事项等问题时，必须尽可能详尽地回答，涵盖以下所有维度：
 
-1. **产品定位**：这款设备是什么、解决什么核心问题、在赛诺秀产品线中的定位
-2. **核心技术参数**：波长、能量密度、频率、光斑尺寸、脉宽、技术原理等
-3. **适应症**：能做什么、适合哪些皮肤问题、适合哪类人群
-4. **禁忌症**：哪些情况绝对不能做、哪些情况需谨慎
-5. **治疗注意事项**：术前准备、术中体验、术后护理（保湿/防晒/恢复期）
-6. **差异化优势**：与同类设备或竞品相比的核心优势是什么
-7. **适用场景**：2B视角（机构如何运营推广）/ 2C视角（消费者关心的问题）
+1. 产品定位：这款设备是什么、解决什么核心问题、在赛诺秀产品线中的定位
+2. 核心技术参数：波长、能量密度、频率、光斑尺寸、脉宽、技术原理等
+3. 适应症：能做什么、适合哪些皮肤问题、适合哪类人群
+4. 禁忌症：哪些情况绝对不能做、哪些情况需谨慎
+5. 治疗注意事项：术前准备、术中体验、术后护理（保湿/防晒/恢复期）
+6. 差异化优势：与同类设备或竞品相比的核心优势是什么
+7. 适用场景：2B视角（机构如何运营推广）/ 2C视角（消费者关心的问题）
 
-**回答原则：**
+回答原则：
 - 优先引用知识库中的产品资料原文
 - 知识库没有的内容，基于品牌背景知识补充
 - 2B/2C有差异时分别说明
@@ -128,7 +129,7 @@ def get_time_context() -> str:
     elif month in [6, 7, 8]:
         season, tips = "夏季", "防晒、脱毛旺季、暑期变美、端午/七夕节点、晒后修复、露肤季"
     elif month in [9, 10, 11]:
-        season, tips = "秋季", "换季修复、年底变美冲刺"
+        season, tips = "秋季", "换季修复、光子嫩肤旺季、双十一、年底变美冲刺"
     else:
         season, tips = "冬季", "年货节、春节前变美、元旦跨年、冬季皮肤干燥修护"
     return f"当前时间：{now.strftime('%Y年%m月%d日')}，{season}。营销节点参考：{tips}。"
@@ -179,7 +180,9 @@ def get_documents():
 
 
 @app.delete("/documents/{filename}")
-def remove_document(filename: str):
+def remove_document(filename: str, password: str = ""):
+    if UPLOAD_PASSWORD and password != UPLOAD_PASSWORD:
+        raise HTTPException(status_code=403, detail="密码错误，无权删除")
     try:
         return delete_document(filename)
     except Exception as e:
@@ -188,8 +191,7 @@ def remove_document(filename: str):
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...), password: str = ""):
-    upload_pwd = os.environ.get("UPLOAD_PASSWORD", "")
-    if upload_pwd and password != upload_pwd:
+    if UPLOAD_PASSWORD and password != UPLOAD_PASSWORD:
         raise HTTPException(status_code=403, detail="密码错误，无权上传")
     if not file.filename.lower().endswith((".pdf", ".docx", ".xlsx", ".xlsm", ".pptx", ".txt")):
         raise HTTPException(status_code=400, detail="仅支持 .pdf、.docx、.xlsx、.pptx、.txt 文件")
@@ -198,17 +200,12 @@ async def upload_file(file: UploadFile = File(...), password: str = ""):
         return ingest_document(file.filename, content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    content = await file.read()
-    try:
-        return ingest_document(file.filename, content)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/extract")
 async def extract_file(file: UploadFile = File(...), save_to_kb: bool = False, password: str = ""):
-    if save_to_kb:
-        upload_pwd = os.environ.get("UPLOAD_PASSWORD", "")
-        if upload_pwd and password != upload_pwd:
-            raise HTTPException(status_code=403, detail="密码错误，无权存入知识库")
+    if save_to_kb and UPLOAD_PASSWORD and password != UPLOAD_PASSWORD:
+        raise HTTPException(status_code=403, detail="密码错误，无权存入知识库")
     content = await file.read()
     try:
         text = extract_text_any(file.filename, content)

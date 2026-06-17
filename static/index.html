@@ -171,15 +171,10 @@ const saveToKbToggle = document.getElementById('saveToKbToggle');
 let history = [];
 let pendingAttachment = null;
 const CAT_PREFIX = { product: '[产品]', '2b': '[2B]', '2c': '[2C]' };
-
 function toggleCat(id) {
   const el = document.getElementById(id);
-  const isOpen = el.classList.contains('open');
   el.classList.toggle('open');
-  const body = el.querySelector('.kb-cat-body');
-  body.style.display = isOpen ? 'none' : 'block';
 }
-
 function autoExpand() {
   // 默认全部收起，点击才展开
 }
